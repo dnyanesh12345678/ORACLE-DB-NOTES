@@ -1,0 +1,229 @@
+Skip to content
+Chat history
+
+You said:
+what is VIEWS in oracle please explain
+ChatGPT said:
+Got it 👍 Let’s go step by step and keep it very simple.
+
+🔹 What is a VIEW in Oracle?
+A VIEW in Oracle is like a virtual table.
+
+It does not store actual data by itself.
+
+Instead, it is based on a query (SELECT statement) that pulls data from one or more real tables.
+
+When you query the view, Oracle runs the underlying query and shows you the result as if it were a table.
+
+👉 Think of it as a "window" into your database.
+
+🔹 Example
+Let’s say you have a table called employees:
+
+emp_id	name	salary	department
+101	Rahul	50000	IT
+102	Priya	60000	HR
+103	Ankit	55000	IT
+Now, you only want to see employees from the IT department again and again.
+
+Instead of writing the same query:
+
+SELECT emp_id, name, salary
+FROM employees
+WHERE department = 'IT';
+You can create a view:
+
+CREATE VIEW it_employees AS
+SELECT emp_id, name, salary
+FROM employees
+WHERE department = 'IT';
+Now you can simply query the view:
+
+SELECT * FROM it_employees;
+And it will return:
+
+emp_id	name	salary
+101	Rahul	50000
+103	Ankit	55000
+🔹 Why use Views?
+Simplify queries → Instead of writing long queries again and again, you just use the view.
+
+Security → You can give users access to a view instead of the full table (hide sensitive columns like salary).
+
+Reusability → One query can be reused by multiple applications or users.
+
+Abstraction → Underlying table structure can change, but the view can remain the same for applications.
+
+🔹 Types of Views in Oracle
+Simple View
+
+Based on a single table.
+
+Can allow updates (with some restrictions).
+
+Complex View
+
+Based on multiple tables, joins, aggregations (GROUP BY, etc).
+
+Usually read-only (can’t update directly).
+
+✅ In short:
+A view is like a saved SELECT query that behaves like a table. It helps in simplifying, securing, and reusing queries.
+
+Would you like me to also explain the difference between a VIEW and a TABLE with a real-life example?
+
+You said:
+please show again real time transaction based view which can do updates on some part of table
+ChatGPT said:
+Perfect 👍 You want a real-time transaction-based example of a view in Oracle, and you also want to see how updates can be done on it. Let’s do that step by step.
+
+🔹 Real-life Example: Bank Transactions
+Suppose you have a table called transactions:
+
+CREATE TABLE transactions (
+    txn_id      NUMBER PRIMARY KEY,
+    account_id  NUMBER,
+    txn_type    VARCHAR2(20),   -- 'DEPOSIT' or 'WITHDRAW'
+    amount      NUMBER,
+    txn_date    DATE
+);
+Sample data:
+
+txn_id	account_id	txn_type	amount	txn_date
+1	101	DEPOSIT	5000	19-AUG-25
+2	101	WITHDRAW	2000	19-AUG-25
+3	102	DEPOSIT	3000	18-AUG-25
+🔹 Create a View for Only Deposits
+You want a view that shows only deposits (not withdrawals):
+
+CREATE VIEW deposit_view AS
+SELECT txn_id, account_id, amount, txn_date
+FROM transactions
+WHERE txn_type = 'DEPOSIT';
+Now if you query:
+
+SELECT * FROM deposit_view;
+Output:
+
+txn_id	account_id	amount	txn_date
+1	101	5000	19-AUG-25
+3	102	3000	18-AUG-25
+🔹 Updating Through the View
+Since this is a simple view (based on one table, no GROUP BY, no JOIN), you can update the base table through it.
+
+Example: Increase Rahul’s deposit amount:
+
+UPDATE deposit_view
+SET amount = 6000
+WHERE txn_id = 1;
+✅ This will automatically update the transactions table also.
+
+Now, if you check:
+
+SELECT * FROM transactions WHERE txn_id = 1;
+Output:
+
+txn_id	account_id	txn_type	amount	txn_date
+1	101	DEPOSIT	6000	19-AUG-25
+🔹 Important Rules for Updatable Views in Oracle
+A view can be updatable only if:
+
+It is based on a single table.
+
+No DISTINCT, GROUP BY, HAVING, or aggregate functions.
+
+No UNION, JOIN, or CONNECT BY.
+
+No pseudocolumns like ROWNUM.
+
+👉 If a view breaks these rules, then it becomes read-only (you can only SELECT from it, not UPDATE/INSERT/DELETE).
+
+✅ In short:
+
+You can use views for real-time transaction systems like banking to hide unnecessary data and allow updates.
+
+Updating the view updates the underlying table, as long as the view is a simple view.
+
+Would you like me to also show you an example of a complex view (like monthly total deposits per account) which is read-only?
+
+You said:
+yes
+ChatGPT said:
+Great 👍 Let’s extend our bank transactions example and build a complex view that is read-only (cannot update directly).
+
+🔹 Same Base Table
+We already have the transactions table:
+
+CREATE TABLE transactions (
+    txn_id      NUMBER PRIMARY KEY,
+    account_id  NUMBER,
+    txn_type    VARCHAR2(20),   -- 'DEPOSIT' or 'WITHDRAW'
+    amount      NUMBER,
+    txn_date    DATE
+);
+🔹 Complex View: Monthly Total Deposits per Account
+Here we want to see:
+
+Each account’s total deposits,
+
+Grouped by month and year.
+
+CREATE VIEW monthly_deposit_summary AS
+SELECT account_id,
+       TO_CHAR(txn_date, 'MM-YYYY') AS month_year,
+       SUM(amount) AS total_deposit
+FROM transactions
+WHERE txn_type = 'DEPOSIT'
+GROUP BY account_id, TO_CHAR(txn_date, 'MM-YYYY');
+🔹 Sample Data
+If we have:
+
+txn_id	account_id	txn_type	amount	txn_date
+1	101	DEPOSIT	5000	05-AUG-25
+2	101	DEPOSIT	2000	15-AUG-25
+3	102	DEPOSIT	3000	19-JUL-25
+4	102	DEPOSIT	4000	20-AUG-25
+🔹 Querying the View
+SELECT * FROM monthly_deposit_summary;
+Result:
+
+account_id	month_year	total_deposit
+101	08-2025	7000
+102	07-2025	3000
+102	08-2025	4000
+🔹 Why This is Read-Only
+Because the view:
+
+Uses GROUP BY (aggregation).
+
+Uses SUM() (aggregate function).
+
+👉 Oracle cannot map back your changes directly to the base table.
+
+Example:
+
+UPDATE monthly_deposit_summary
+SET total_deposit = 8000
+WHERE account_id = 101 AND month_year = '08-2025';
+❌ This will throw an error:
+
+ORA-01732: data manipulation operation not legal on this view
+✅ Key Point
+Simple View → Updatable (like our deposit_view).
+
+Complex View → Read-only (like our monthly_deposit_summary).
+
+👉 This way, in a real banking system:
+
+Simple views can be used by clerks to update deposits/withdrawals.
+
+Complex views can be used by managers for reports/analysis (totals, summaries) but not for updates.
+
+Would you like me to also show you how to force a complex view to be updatable using an INSTEAD OF trigger?
+
+
+
+
+No file chosenNo file chosen
+ChatGPT can make mistakes. Check important info. See Cookie Preferences.
+
