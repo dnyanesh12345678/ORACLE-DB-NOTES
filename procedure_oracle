@@ -1,0 +1,506 @@
+Skip to content
+Chat history
+
+You said:
+What is procedure in Oracle DB please explain 
+ChatGPT said:
+Let’s understand what a procedure is in Oracle Database, in very simple language 👇
+
+🧩 Definition:
+A procedure in Oracle Database is a named block of PL/SQL code that performs a specific task.
+
+You can think of it like a function in programming — it is written once and can be called many times whenever you need that task.
+
+💡 Real-life Example (Simple way):
+Imagine you work in a bank.
+
+Every time a customer deposits money, you:
+
+Check account number
+
+Add amount to balance
+
+Print confirmation message
+
+You can write all this logic once inside a procedure called deposit_money.
+Then, whenever a deposit happens, you simply call that procedure instead of writing the same steps again.
+
+⚙️ Basic Syntax of a Procedure
+CREATE OR REPLACE PROCEDURE procedure_name
+IS
+BEGIN
+   -- Your PL/SQL statements go here
+END;
+/
+🧠 Example 1: Simple Procedure
+Let’s create a procedure to print “Hello” message.
+
+CREATE OR REPLACE PROCEDURE say_hello
+IS
+BEGIN
+   DBMS_OUTPUT.PUT_LINE('Hello, welcome to Oracle!');
+END;
+/
+👉 To execute this procedure:
+
+EXECUTE say_hello;
+Output:
+
+Hello, welcome to Oracle!
+🧮 Example 2: Procedure with Parameters
+Let’s make it more useful — a procedure that prints employee details.
+
+CREATE OR REPLACE PROCEDURE show_employee(
+   emp_id IN NUMBER
+)
+IS
+   emp_name VARCHAR2(50);
+BEGIN
+   SELECT name INTO emp_name FROM employees WHERE id = emp_id;
+   DBMS_OUTPUT.PUT_LINE('Employee Name: ' || emp_name);
+EXCEPTION
+   WHEN NO_DATA_FOUND THEN
+      DBMS_OUTPUT.PUT_LINE('Employee not found!');
+END;
+/
+👉 To run it:
+
+EXECUTE show_employee(101);
+📦 Key Points:
+Feature	Description
+Stored in DB	Procedure is saved permanently in Oracle Database.
+Reusability	Can be called many times by different users/programs.
+Parameters	Can accept input (IN), give output (OUT), or both (IN OUT).
+Error Handling	You can handle exceptions inside procedure using EXCEPTION block.
+Improves Performance	Stored once and runs faster than sending SQL again and again.
+🧩 Types of Parameters
+Type	Purpose	Example
+IN	Input only	emp_id IN NUMBER
+OUT	Output only	emp_name OUT VARCHAR2
+IN OUT	Input + Output	total_salary IN OUT NUMBER
+🧰 Example 3: Procedure with IN and OUT Parameters
+CREATE OR REPLACE PROCEDURE get_bonus(
+   emp_id IN NUMBER,
+   bonus OUT NUMBER
+)
+IS
+   salary NUMBER;
+BEGIN
+   SELECT sal INTO salary FROM employees WHERE id = emp_id;
+   bonus := salary * 0.10;
+END;
+/
+👉 To execute:
+
+DECLARE
+   b NUMBER;
+BEGIN
+   get_bonus(101, b);
+   DBMS_OUTPUT.PUT_LINE('Bonus = ' || b);
+END;
+/
+✅ Advantages of Using Procedures
+Code reusability
+
+Centralized business logic
+
+Faster performance
+
+Security (access control via GRANT EXECUTE)
+
+Easier maintenance
+
+Would you like me to show a real-world example (like a banking system or employee management system) using a procedure step-by-step?
+It’ll help you understand better how it’s used in real applications.
+
+You said:
+Yes please show this with OUT parameter only
+ChatGPT said:
+Perfect 👍 let’s take a real-world banking example using an OUT parameter only — very easy to understand.
+
+🏦 Scenario: Banking System Example
+We have a table named accounts:
+
+account_id	customer_name	balance
+101	Rajesh	50000
+102	Meena	70000
+103	Amit	30000
+We want to create a procedure that takes an account ID and returns (outputs) the account balance using an OUT parameter.
+
+🧩 Step 1 — Create the Table
+CREATE TABLE accounts (
+   account_id NUMBER PRIMARY KEY,
+   customer_name VARCHAR2(50),
+   balance NUMBER
+);
+🧩 Step 2 — Insert Sample Data
+INSERT INTO accounts VALUES (101, 'Rajesh', 50000);
+INSERT INTO accounts VALUES (102, 'Meena', 70000);
+INSERT INTO accounts VALUES (103, 'Amit', 30000);
+COMMIT;
+🧩 Step 3 — Create the Procedure (with OUT parameter)
+CREATE OR REPLACE PROCEDURE get_balance(
+   acc_id IN NUMBER,           -- input parameter
+   acc_balance OUT NUMBER      -- output parameter
+)
+IS
+BEGIN
+   SELECT balance 
+   INTO acc_balance 
+   FROM accounts 
+   WHERE account_id = acc_id;
+
+EXCEPTION
+   WHEN NO_DATA_FOUND THEN
+      acc_balance := NULL;     -- set to NULL if account not found
+END;
+/
+🧩 Step 4 — Execute the Procedure
+You can’t directly EXECUTE when using OUT parameters —
+you need to store the output in a variable using an anonymous PL/SQL block.
+
+DECLARE
+   bal NUMBER;  -- variable to hold output
+BEGIN
+   get_balance(102, bal);  -- call procedure
+   DBMS_OUTPUT.PUT_LINE('Account Balance = ' || bal);
+END;
+/
+✅ Output:
+
+Account Balance = 70000
+🧠 Explanation:
+Part	Meaning
+acc_id IN NUMBER	Input parameter – we give account number
+acc_balance OUT NUMBER	Output parameter – procedure returns this
+SELECT balance INTO acc_balance	Fetch balance and store in OUT variable
+DBMS_OUTPUT.PUT_LINE	Displays the output on screen
+🚨 If account not found:
+If you pass an invalid ID like get_balance(999, bal);
+Output will be:
+
+Account Balance = 
+(because we set it to NULL in the EXCEPTION block)
+
+✅ Key Benefits of OUT Parameter
+Allows procedure to return a value (like a function)
+
+Useful when you want to get multiple outputs (you can have more than one OUT parameter)
+
+Makes your code modular and reusable
+
+Would you like me to extend this example a bit further — for example, to return both name and balance using two OUT parameters?
+That’s a very common real-world case.
+
+You said:
+Yes please show me 
+ChatGPT said:
+Perfect 👍 Let’s now extend our banking system example to return two output values — both the customer’s name and account balance — using two OUT parameters in Oracle.
+
+🏦 Scenario: Get Account Holder Name and Balance
+We’ll use the same table:
+
+account_id	customer_name	balance
+101	Rajesh	50000
+102	Meena	70000
+103	Amit	30000
+🧩 Step 1 — Table (if not already created)
+CREATE TABLE accounts (
+   account_id NUMBER PRIMARY KEY,
+   customer_name VARCHAR2(50),
+   balance NUMBER
+);
+🧩 Step 2 — Insert Sample Data
+INSERT INTO accounts VALUES (101, 'Rajesh', 50000);
+INSERT INTO accounts VALUES (102, 'Meena', 70000);
+INSERT INTO accounts VALUES (103, 'Amit', 30000);
+COMMIT;
+🧩 Step 3 — Create Procedure with Two OUT Parameters
+CREATE OR REPLACE PROCEDURE get_account_details(
+   acc_id       IN  NUMBER,           -- input: account id
+   cust_name    OUT VARCHAR2,         -- output: customer name
+   acc_balance  OUT NUMBER            -- output: account balance
+)
+IS
+BEGIN
+   SELECT customer_name, balance
+   INTO cust_name, acc_balance
+   FROM accounts
+   WHERE account_id = acc_id;
+
+EXCEPTION
+   WHEN NO_DATA_FOUND THEN
+      cust_name := 'Account Not Found';
+      acc_balance := NULL;
+END;
+/
+🧩 Step 4 — Execute the Procedure
+To use the OUT parameters, we declare variables and call the procedure in a PL/SQL block:
+
+DECLARE
+   v_name VARCHAR2(50);
+   v_balance NUMBER;
+BEGIN
+   get_account_details(102, v_name, v_balance);
+   DBMS_OUTPUT.PUT_LINE('Customer Name  : ' || v_name);
+   DBMS_OUTPUT.PUT_LINE('Account Balance: ' || v_balance);
+END;
+/
+✅ Output:
+
+Customer Name  : Meena
+Account Balance: 70000
+🧠 Explanation of Each Part
+Section	Meaning
+acc_id IN	Input parameter — account ID you provide
+cust_name OUT	Output parameter 1 — returns customer name
+acc_balance OUT	Output parameter 2 — returns account balance
+EXCEPTION block	Handles case when account is not found
+🚨 If Invalid Account ID is Passed
+BEGIN
+   get_account_details(999, v_name, v_balance);
+   DBMS_OUTPUT.PUT_LINE('Customer Name  : ' || v_name);
+   DBMS_OUTPUT.PUT_LINE('Account Balance: ' || v_balance);
+END;
+/
+✅ Output:
+
+Customer Name  : Account Not Found
+Account Balance: 
+💡 Why Use OUT Parameters?
+Because:
+
+You can return multiple values from a single procedure.
+
+Reduces need to run multiple queries.
+
+Makes your logic reusable by many applications (like web apps, reports, etc.).
+
+Would you like me to show the same example using IN OUT parameters next —
+so you can see how a value can be passed in and then modified and returned from the same variable?
+
+You said:
+Yes please show IN OUT parameter with real time example 
+ChatGPT said:
+Perfect 👍 Now let’s learn IN OUT parameters in Oracle PL/SQL —
+we’ll do it with a real-world banking example so it’s very clear.
+
+🏦 Scenario: Bank Account — Update Balance with IN OUT Parameter
+Let’s imagine a customer wants to deposit money into their account.
+We’ll create a procedure that takes the current balance, adds the deposit amount,
+and then returns the new balance back using an IN OUT parameter.
+
+🧠 Concept
+IN parameter → sends value into the procedure.
+
+OUT parameter → sends value out of the procedure.
+
+IN OUT parameter → does both:
+
+Receives a value when the procedure starts.
+
+Returns an updated value after the procedure runs.
+
+🧩 Step 1 — Create Table
+CREATE TABLE accounts (
+   account_id NUMBER PRIMARY KEY,
+   customer_name VARCHAR2(50),
+   balance NUMBER
+);
+🧩 Step 2 — Insert Data
+INSERT INTO accounts VALUES (101, 'Rajesh', 50000);
+INSERT INTO accounts VALUES (102, 'Meena', 70000);
+INSERT INTO accounts VALUES (103, 'Amit', 30000);
+COMMIT;
+🧩 Step 3 — Create Procedure with IN OUT Parameter
+We’ll make a procedure that:
+
+Takes account ID (IN)
+
+Takes current balance (IN OUT)
+
+Adds deposit amount (IN)
+
+Updates the table
+
+Returns new balance (via IN OUT)
+
+CREATE OR REPLACE PROCEDURE deposit_amount(
+   acc_id        IN NUMBER,           -- input: account ID
+   deposit_amt   IN NUMBER,           -- input: deposit amount
+   acc_balance   IN OUT NUMBER        -- input + output: balance
+)
+IS
+BEGIN
+   -- Add deposit amount to balance
+   acc_balance := acc_balance + deposit_amt;
+
+   -- Update new balance in table
+   UPDATE accounts
+   SET balance = acc_balance
+   WHERE account_id = acc_id;
+
+   DBMS_OUTPUT.PUT_LINE('Deposit successful! New Balance: ' || acc_balance);
+EXCEPTION
+   WHEN OTHERS THEN
+      DBMS_OUTPUT.PUT_LINE('Error occurred while depositing money.');
+END;
+/
+🧩 Step 4 — Execute the Procedure
+DECLARE
+   v_balance NUMBER;
+BEGIN
+   -- Fetch current balance
+   SELECT balance INTO v_balance FROM accounts WHERE account_id = 101;
+
+   -- Call the procedure with IN OUT parameter
+   deposit_amount(101, 5000, v_balance);
+
+   -- Display updated balance
+   DBMS_OUTPUT.PUT_LINE('Returned (Updated) Balance: ' || v_balance);
+END;
+/
+✅ Output:
+
+Deposit successful! New Balance: 55000
+Returned (Updated) Balance: 55000
+🧠 What Happened Internally
+Step	Action
+1️⃣	Procedure received v_balance = 50000
+2️⃣	Added deposit amount +5000 → total 55000
+3️⃣	Updated table with new balance
+4️⃣	Returned the updated balance to the calling block
+⚙️ Check the Table After Deposit
+SELECT * FROM accounts WHERE account_id = 101;
+✅ Output:
+
+account_id	customer_name	balance
+101	Rajesh	55000
+💡 When to Use IN OUT Parameters
+Use them when:
+
+You want to modify and return a value.
+
+The same variable needs to be used as both input and output.
+
+Example use cases:
+
+Bank deposit or withdrawal updates
+
+Inventory stock adjustment
+
+Salary revision (increasing an employee’s pay and returning new total)
+
+Would you like me to now show a withdrawal example (where balance decreases using IN OUT parameter)?
+That’ll complete the real banking use case perfectly.
+
+You said:
+Yes
+ChatGPT said:
+Excellent 👍 — let’s complete your banking use case with a withdrawal example using an IN OUT parameter in Oracle.
+
+This time, we’ll handle balance deduction, and also check if the customer has enough funds before allowing the withdrawal.
+
+🏦 Scenario: Withdraw Amount Using IN OUT Parameter
+We already have this table:
+
+account_id	customer_name	balance
+101	Rajesh	55000
+102	Meena	70000
+103	Amit	30000
+🧩 Step 1 — Create the Procedure
+CREATE OR REPLACE PROCEDURE withdraw_amount(
+   acc_id       IN NUMBER,          -- input: account ID
+   withdraw_amt IN NUMBER,          -- input: amount to withdraw
+   acc_balance  IN OUT NUMBER       -- input + output: balance
+)
+IS
+BEGIN
+   -- Check for sufficient funds
+   IF acc_balance >= withdraw_amt THEN
+      acc_balance := acc_balance - withdraw_amt;   -- Deduct amount
+      
+      UPDATE accounts
+      SET balance = acc_balance
+      WHERE account_id = acc_id;
+      
+      DBMS_OUTPUT.PUT_LINE('Withdrawal successful! New Balance: ' || acc_balance);
+   ELSE
+      DBMS_OUTPUT.PUT_LINE('Insufficient balance! Transaction cancelled.');
+   END IF;
+EXCEPTION
+   WHEN OTHERS THEN
+      DBMS_OUTPUT.PUT_LINE('Error occurred while processing withdrawal.');
+END;
+/
+🧩 Step 2 — Execute the Procedure
+Let’s test it with Rajesh’s account (101) which currently has ₹55,000.
+
+DECLARE
+   v_balance NUMBER;
+BEGIN
+   -- Fetch current balance
+   SELECT balance INTO v_balance FROM accounts WHERE account_id = 101;
+
+   -- Try to withdraw ₹10,000
+   withdraw_amount(101, 10000, v_balance);
+
+   -- Display returned balance
+   DBMS_OUTPUT.PUT_LINE('Returned (Updated) Balance: ' || v_balance);
+END;
+/
+✅ Output:
+
+Withdrawal successful! New Balance: 45000
+Returned (Updated) Balance: 45000
+🧮 Step 3 — Try an Invalid Withdrawal (More than available balance)
+DECLARE
+   v_balance NUMBER;
+BEGIN
+   SELECT balance INTO v_balance FROM accounts WHERE account_id = 103;  -- balance = 30000
+
+   -- Try to withdraw ₹40,000
+   withdraw_amount(103, 40000, v_balance);
+
+   DBMS_OUTPUT.PUT_LINE('Returned (Updated) Balance: ' || v_balance);
+END;
+/
+✅ Output:
+
+Insufficient balance! Transaction cancelled.
+Returned (Updated) Balance: 30000
+(Notice that the balance remains unchanged.)
+
+🧠 Explanation
+Parameter	Type	Purpose
+acc_id	IN	Account ID input
+withdraw_amt	IN	Amount to withdraw
+acc_balance	IN OUT	Takes current balance and returns new one
+IF block	Ensures sufficient funds	
+UPDATE	Writes the new balance into database	
+📦 Check Final Balances
+SELECT * FROM accounts;
+✅ Output:
+
+account_id	customer_name	balance
+101	Rajesh	45000
+102	Meena	70000
+103	Amit	30000
+✅ Real-Life Analogy
+Think of IN OUT like handing your bank passbook to the cashier:
+
+You give (IN) your old balance,
+
+The cashier updates it with the new transaction,
+
+And you receive (OUT) your updated balance back.
+
+Would you like me to show both deposit and withdrawal combined in a single reusable procedure (like a mini banking transaction system)?
+It’s a great next step to see how procedures can handle multiple operations smartly.
+
+
+
+
+No file chosenNo file chosen
+ChatGPT can make mistakes. Check important info. See Cookie Preferences.
+
